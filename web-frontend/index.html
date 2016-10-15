@@ -3,7 +3,7 @@
 	<head>
 		<title>Chess</title>
 	</head>
-	<body>
+	<body style="text-align:center;">
 		<script script="text/javascript">
 			/*
 				Game data:
@@ -27,16 +27,37 @@
 								 [ 0, 0, 0, 0, 0, 0, 0, 0 ],
 								 [ 0, 0, 0, 0, 0, 0, 0, 0 ],
 								 [ 7, 7, 7, 7, 7, 7, 7, 7 ] ];
-			
+				
+				var GameWidth = document.documentElement.clientWidth * 0.9;
+				var GameHeight = document.documentElement.clientHeight * 0.9;
+				var GameSize = GameWidth;
+				var PaddingX = 0;
+				var PaddingY = (GameHeight - GameWidth) / 2;
+				if (GameHeight < GameWidth) {
+					GameSize = GameHeight;
+					PaddingY = 0;
+					PaddingX = (GameWidth - GameHeight) / 2;
+				}
+
 				var c = document.getElementById("GameField");
-				c.width = document.documentElement.clientWidth;
-				c.height = document.documentElement.clientHeight;
+				c.width = GameWidth;
+				c.height = GameHeight;
 				var ctx = c.getContext("2d");
+				
+				var CurrentImg;
+				for (var x = 0; x < 8; x++) {
+					for (var y = 0; y < 8; y++) {
+						if (GameData[y][x] != 0) {
+							CurrentImg = document.getElementById("img" + GameData[y][x]);
+							ctx.drawImage(CurrentImg, (x * (GameSize / 8)) + PaddingX, (y * (GameSize / 8)) + PaddingY, GameSize / 8, GameSize / 8);
+						}
+					}
+				}
 			}
 
 			window.onload = DrawField;
 		</script>
-		<canvas id="GameField" width="1000" height="1000" style="position:absolute;">
+		<canvas id="GameField" width="1000" height="1000" style="margin-top:1%;">
 			Your browser sucks!
 		</canvas>
 		<img src="img/ba_wh.png" id="img1" style="display:none;"/>
