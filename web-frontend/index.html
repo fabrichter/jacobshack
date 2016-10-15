@@ -6,12 +6,11 @@
 	</head>
 	<body style="text-align:center;">
 		<script type="text/javascript" src="chess.min.js"></script>
-		<script type="text/javascript" src="aws-sdk.min.js"></script>
 		<script type="text/javascript">
 			var GameWidth, GameHeight, GameSize, PaddingX, PaddingY;
 			var chess;
 			var HasData = false;
-			var DebugMode = false;
+			var DebugMode = true;
 
 			function Setup() {
 				chess = new Chess();
@@ -20,36 +19,9 @@
 					HasData = true;
 					chess.load("r1k4r/p2nb1p1/2b4p/1p1n1p2/2PP4/3Q1NB1/1P3PPP/R5K1 b - c3 0 19");
 				} else {
-					var cognitoIdentityPoolID = "eu-west-1:620e6b80-0d91-4f4d-9f04-d764bbb50653";
-					var sqsUrl = "https://sqs.eu-west-1.amazonaws.com/094682499647/ChessGames";
-					var awsRegion = "eu-west-1";
-					var creds = new AWS.CognitoIdentityCredentials({ IdentityPoolId: cognitoIdentityPoolID });
-					AWS.config.credentials = creds;
-					AWS.config.region = awsRegion;
-					var sqs = new AWS.SQS();
-					var params = { QueueUrl: sqsUrl, VisibilityTimeout: 0, WaitTimeSeconds: 1 };
-
-					sqs.receiveMessage(params, function(err, data) {
-						if (err) {
-							console.log("Can not get data from SQS D:");
-						} else {
-							if (data.Messages[0] != null) {
-								HasData = true;
-								if (!chess.load(data.Messages[0].Body)) {
-									console.log("Invalid data D:");
-									HasData = false;
-								}
-							}
-						}
-						if (!HasData) {
-							document.write("No data!");
-						} else {
-							DrawField();
-						}
-						window.setTimeout(DoReload, 5000);
-					});
+					// Fetch data from server
 				}
-
+				
 				OnResize();
 			};
 
