@@ -5,18 +5,41 @@
 	</head>
 	<body style="text-align:center;">
 		<script type="text/javascript" src="chess.min.js"></script>
+		<script type="text/javascript" src="https://sdk.amazonaws.com/js/aws-sdk-2.2.43.min.js"></script>
 		<script type="text/javascript">
 			function DrawField() {
 				var chess = new Chess();
-				var GameData = [ [ { type: chess.PAWN, color: chess.BLACK }, null, null, null, null, null, null, null ],
-								 [ null, null, null, null, null, null, null, null ],
-								 [ null, null, null, null, null, null, null, null ],
-								 [ null, null, null, { type: chess.KING, color: chess.WHITE }, null, null, null, null ],
-								 [ null, null, null, null, null, null, null, null ],
-								 [ null, null, null, null, null, null, null, null ],
-								 [ null, null, null, null, null, null, null, null ],
-								 [ null, null, null, null, null, null, null, null ] ];
 				
+				var cognitoIdentityPoolID = "CREDS";
+				var sqsUrl = "CREDS";
+				var awsRegion = 'eu-west-1';
+				var creds = new AWS.CognitoIdentityCredentials({ IdentityPoolId: cognitoIdentityPoolID });
+				AWS.config.region = awsRegion;
+				var sqs = new AWS.SQS();
+				var params = { QueueUrl: sqsUrl, VisibilityTimeout: 0, WaitTimeSeconds: 20 };
+				var HasData = false;
+				var GameData;
+
+				sqs.receiveMessage(params, function(err, data) {
+					if (!err) {
+						if (data.Messages[0]) {
+							HasData = true;
+							GameData = data.Messages[0].Body;
+							var params = { QueueUrl: sqsUrl, ReceiptHandle: data.Messages[0].ReceiptHandle };
+							sqs.deleteMessage(params, function(err, data) {
+								if (err) {
+									console.log("Can not delete the message D:");
+								}
+							});
+						}
+					}
+				});
+				
+				if (!HasData) {
+					document.write("No data!");
+					return;
+				}
+
 				var GameWidth = document.documentElement.clientWidth * 0.9;
 				var GameHeight = document.documentElement.clientHeight * 0.9;
 				var GameSize = GameWidth * 0.9;
