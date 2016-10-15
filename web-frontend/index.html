@@ -10,6 +10,7 @@
 		<script type="text/javascript">
 			var GameWidth, GameHeight, GameSize, PaddingX, PaddingY, GameData;
 			var HasData = false;
+			var Letters = [ "A", "B", "C", "D", "E", "F", "G", "H" ];
 			var DebugMode = false;
 
 			function Setup() {
@@ -40,19 +41,29 @@
 						} else {
 							if (data.Messages[0]) {
 								HasData = true;
-								GameData = data.Messages[0].Body;
+								if (!chess.load(data.Messages[0].Body)) {
+									console.log("Invalid data D:");
+									HasData = false;
+								}
+								GameData = new Array(8);
+								for (var x = 0; x < 8; x++) {
+									GameData[x] = new Array(8);
+									for (var y = 0; y < 8; y++) {
+										GameData[x][y] = chess.get(Letters[x] + y);
+									}
+								}
 								var params = { QueueUrl: sqsUrl, ReceiptHandle: data.Messages[0].ReceiptHandle };
 								sqs.deleteMessage(params, function(err, data) {
 									if (err) {
 										console.log("Can not delete the message D:");
 									}
 								});
-								if (!HasData) {
-									document.write("No data!");
-								} else {
-									DrawField();
-								}
 							}
+						}
+						if (!HasData) {
+							document.write("No data!");
+						} else {
+							DrawField();
 						}
 					});
 				}
@@ -72,7 +83,6 @@
 				ctx.fillStyle = "#000000";
 				ctx.fillRect(PaddingX - (GameSize * 0.03), PaddingY - (GameSize * 0.03), GameSize * 1.06, GameSize * 1.06);
 				
-				var Letters = [ "A", "B", "C", "D", "E", "F", "G", "H" ];
 				ctx.font = (GameSize * 0.02) + "px Arial";
 				ctx.fillStyle = "#FFFFFF";
 				for (var i = 0; i < 8; i++) {
