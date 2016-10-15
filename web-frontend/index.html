@@ -1,0 +1,181 @@
+<!Doctype HTML>
+<!-- Do NOT expect this code to be readable! You have been warned! -->
+<html>
+	<head>
+		<title>Chess</title>
+	</head>
+	<body style="text-align:center;">
+		<script type="text/javascript" src="chess.min.js"></script>
+		<script type="text/javascript" src="aws-sdk.min.js"></script>
+		<script type="text/javascript">
+			var GameWidth, GameHeight, GameSize, PaddingX, PaddingY, GameData;
+			var HasData = false;
+			var Letters = [ "A", "B", "C", "D", "E", "F", "G", "H" ];
+			var DebugMode = false;
+
+			function Setup() {
+				var chess = new Chess();
+				
+				if (DebugMode) {
+					GameData = [ [ { type: chess.PAWN, color: chess.BLACK }, null, null, null, null, null, null, null ],
+								 [ null, null, null, null, null, null, null, null ],
+								 [ null, null, null, null, null, null, null, null ],
+								 [ null, null, null, null, null, null, null, null ],
+								 [ null, null, null, null, null, null, null, null ],
+								 [ null, null, null, null, null, null, null, null ],
+								 [ null, null, null, null, null, null, null, null ],
+								 [ null, null, null, null, null, null, null, { type: chess.KING, color: chess.WHITE } ] ];
+				} else {
+					var cognitoIdentityPoolID = "eu-west-1:620e6b80-0d91-4f4d-9f04-d764bbb50653";
+					var sqsUrl = "https://sqs.eu-west-1.amazonaws.com/094682499647/ChessGames";
+					var awsRegion = "eu-west-1";
+					var creds = new AWS.CognitoIdentityCredentials({ IdentityPoolId: cognitoIdentityPoolID });
+					AWS.config.credentials = creds;
+					AWS.config.region = awsRegion;
+					var sqs = new AWS.SQS();
+					var params = { QueueUrl: sqsUrl, VisibilityTimeout: 0, WaitTimeSeconds: 20 };
+
+					sqs.receiveMessage(params, function(err, data) {
+						if (err) {
+							console.log("Can not get data from SQS D:");
+						} else {
+							if (data.Messages[0]) {
+								HasData = true;
+								if (!chess.load(data.Messages[0].Body)) {
+									console.log("Invalid data D:");
+									HasData = false;
+								}
+								GameData = new Array(8);
+								for (var x = 0; x < 8; x++) {
+									GameData[x] = new Array(8);
+									for (var y = 0; y < 8; y++) {
+										GameData[x][y] = chess.get(Letters[x] + y);
+									}
+								}
+								var params = { QueueUrl: sqsUrl, ReceiptHandle: data.Messages[0].ReceiptHandle };
+								sqs.deleteMessage(params, function(err, data) {
+									if (err) {
+										console.log("Can not delete the message D:");
+									}
+								});
+							}
+						}
+						if (!HasData) {
+							document.write("No data!");
+						} else {
+							DrawField();
+						}
+					});
+				}
+
+				OnResize();
+			};
+
+			function DrawField() {
+				if (!HasData) {
+					return;
+				}
+				
+				var chess = new Chess();
+				var c = document.getElementById("GameField");
+				var ctx = c.getContext("2d");
+				
+				ctx.fillStyle = "#000000";
+				ctx.fillRect(PaddingX - (GameSize * 0.03), PaddingY - (GameSize * 0.03), GameSize * 1.06, GameSize * 1.06);
+				
+				ctx.font = (GameSize * 0.02) + "px Arial";
+				ctx.fillStyle = "#FFFFFF";
+				for (var i = 0; i < 8; i++) {
+					ctx.fillText(Letters[i], (i * (GameSize / 8)) + (GameSize / 16) + PaddingX - (GameSize * 0.005), PaddingY - (GameSize * 0.01));
+					ctx.fillText(8 - i, PaddingX - (GameSize * 0.02), (i * (GameSize / 8)) + (GameSize / 16) + PaddingY + (GameSize * 0.005));
+				}
+				
+				for (var x = 0; x < 8; x++) {
+					for (var y = 0; y < 8; y++) {
+						if (((y * 9) + x) % 2 == 0) {
+							ctx.fillStyle = "#FFCE9E";
+						} else {
+							ctx.fillStyle = "#D18B47";
+						}
+						ctx.fillRect(x * (GameSize / 8) + PaddingX, y * (GameSize / 8) + PaddingY, GameSize / 8, GameSize / 8);
+						ctx.moveTo(x * (GameSize / 8) + PaddingX, y * (GameSize / 8) + PaddingY);
+						ctx.lineTo(x * (GameSize / 8) + PaddingX, (y + 1) * (GameSize / 8) + PaddingY);
+						ctx.lineTo((x + 1) * (GameSize / 8) + PaddingX, (y + 1) * (GameSize / 8) + PaddingY);
+						ctx.lineTo((x + 1) * (GameSize / 8) + PaddingX, y * (GameSize / 8) + PaddingY);
+						ctx.stroke();
+					}
+				}
+				
+				var CurrentImg;
+				for (var x = 0; x < 8; x++) {
+					for (var y = 0; y < 8; y++) {
+						if (GameData[y][x] != null) {
+							CurrentImg = document.getElementById("img" + GetId(GameData[y][x]));
+							ctx.drawImage(CurrentImg, (x * (GameSize / 8)) + PaddingX, (y * (GameSize / 8)) + PaddingY, GameSize / 8, GameSize / 8);
+						}
+					}
+				}
+			}
+
+			function GetId(p) {
+				var chess = new Chess();
+				var Result;
+				if (p.type == chess.PAWN) {
+					Result = 1;
+				} else if (p.type == chess.KNIGHT) {
+					Result = 2;
+				} else if (p.type == chess.BISHOP) {
+					Result = 3;
+				} else if (p.type == chess.ROOK) {
+					Result = 4;
+				} else if (p.type == chess.QUEEN) {
+					Result = 5;
+				} else if (p.type == chess.KING) {
+					Result = 6;
+				}
+				if (p.color == chess.BLACK) {
+					Result += 6;
+				}
+				return Result;
+			}
+
+			function DoResize() {
+				GameWidth = document.documentElement.clientWidth * 0.9;
+				GameHeight = document.documentElement.clientHeight * 0.9;
+				GameSize = GameWidth * 0.9;
+				if (GameHeight < GameWidth) {
+					GameSize = GameHeight * 0.9;
+				}
+				PaddingX = (GameWidth - GameSize) / 2;
+				PaddingY = (GameHeight - GameSize) / 2;
+				var c = document.getElementById("GameField");
+				c.width = GameWidth;
+				c.height = GameHeight;
+			}
+
+			function OnResize() {
+				DoResize();
+				DrawField();
+			}
+
+			window.addEventListener("load", Setup);
+			window.addEventListener("resize", OnResize);
+		</script>
+		<canvas id="GameField" width="1000" height="1000" style="margin-top:1%;">
+			Your browser sucks!
+		</canvas>
+		<img src="img/ba_wh.png" id="img1" style="display:none;"/>
+		<img src="img/sp_wh.png" id="img2" style="display:none;"/>
+		<img src="img/la_wh.png" id="img3" style="display:none;"/>
+		<img src="img/tu_wh.png" id="img4" style="display:none;"/>
+		<img src="img/qu_wh.png" id="img5" style="display:none;"/>
+		<img src="img/ki_wh.png" id="img6" style="display:none;"/>
+		<img src="img/ba_bl.png" id="img7" style="display:none;"/>
+		<img src="img/sp_bl.png" id="img8" style="display:none;"/>
+		<img src="img/la_bl.png" id="img9" style="display:none;"/>
+		<img src="img/tu_bl.png" id="img10" style="display:none;"/>
+		<img src="img/qu_bl.png" id="img11" style="display:none;"/>
+		<img src="img/ki_bl.png" id="img12" style="display:none;"/>
+	</body>
+</html>
+
