@@ -1,4 +1,5 @@
 <!Doctype HTML>
+<!-- Do NOT expect this code to be readable! You have been warned! -->
 <html>
 	<head>
 		<title>Chess</title>
@@ -8,7 +9,8 @@
 		<script type="text/javascript" src="aws-sdk.min.js"></script>
 		<script type="text/javascript">
 			var GameWidth, GameHeight, GameSize, PaddingX, PaddingY, GameData;
-			var DebugMode = true;
+			var HasData = false;
+			var DebugMode = false;
 
 			function Setup() {
 				var chess = new Chess();
@@ -23,17 +25,19 @@
 								 [ null, null, null, null, null, null, null, null ],
 								 [ null, null, null, null, null, null, null, { type: chess.KING, color: chess.WHITE } ] ];
 				} else {
-					var cognitoIdentityPoolID = "CREDS";
-					var sqsUrl = "CREDS";
-					var awsRegion = 'eu-west-1';
+					var cognitoIdentityPoolID = "eu-west-1:620e6b80-0d91-4f4d-9f04-d764bbb50653";
+					var sqsUrl = "https://sqs.eu-west-1.amazonaws.com/094682499647/ChessGames";
+					var awsRegion = "eu-west-1";
 					var creds = new AWS.CognitoIdentityCredentials({ IdentityPoolId: cognitoIdentityPoolID });
+					AWS.config.credentials = creds;
 					AWS.config.region = awsRegion;
 					var sqs = new AWS.SQS();
 					var params = { QueueUrl: sqsUrl, VisibilityTimeout: 0, WaitTimeSeconds: 20 };
-					var HasData = false;
 
 					sqs.receiveMessage(params, function(err, data) {
-						if (!err) {
+						if (err) {
+							console.log("Can not get data from SQS D:");
+						} else {
 							if (data.Messages[0]) {
 								HasData = true;
 								GameData = data.Messages[0].Body;
@@ -43,21 +47,23 @@
 										console.log("Can not delete the message D:");
 									}
 								});
+								if (!HasData) {
+									document.write("No data!");
+								} else {
+									DrawField();
+								}
 							}
 						}
 					});
-				
-					if (!HasData) {
-						document.write("No data!");
-						return;
-					}
 				}
 
 				OnResize();
-			
 			};
 
 			function DrawField() {
+				if (!HasData) {
+					return;
+				}
 				
 				var chess = new Chess();
 				var c = document.getElementById("GameField");
@@ -102,7 +108,6 @@
 			}
 
 			function GetId(p) {
-				
 				var chess = new Chess();
 				var Result;
 				if (p.type == chess.PAWN) {
@@ -122,11 +127,9 @@
 					Result += 6;
 				}
 				return Result;
-				
 			}
 
 			function DoResize() {
-				
 				GameWidth = document.documentElement.clientWidth * 0.9;
 				GameHeight = document.documentElement.clientHeight * 0.9;
 				GameSize = GameWidth * 0.9;
@@ -138,14 +141,11 @@
 				var c = document.getElementById("GameField");
 				c.width = GameWidth;
 				c.height = GameHeight;
-				
 			}
 
 			function OnResize() {
-				
 				DoResize();
 				DrawField();
-				
 			}
 
 			window.addEventListener("load", Setup);
