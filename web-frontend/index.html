@@ -7,51 +7,60 @@
 		<script type="text/javascript" src="chess.min.js"></script>
 		<script type="text/javascript" src="https://sdk.amazonaws.com/js/aws-sdk-2.2.43.min.js"></script>
 		<script type="text/javascript">
-			function DrawField() {
+			var GameWidth, GameHeight, GameSize, PaddingX, PaddingY, GameData;
+			var DebugMode = true;
+
+			function Setup() {
 				var chess = new Chess();
 				
-				var cognitoIdentityPoolID = "CREDS";
-				var sqsUrl = "CREDS";
-				var awsRegion = 'eu-west-1';
-				var creds = new AWS.CognitoIdentityCredentials({ IdentityPoolId: cognitoIdentityPoolID });
-				AWS.config.region = awsRegion;
-				var sqs = new AWS.SQS();
-				var params = { QueueUrl: sqsUrl, VisibilityTimeout: 0, WaitTimeSeconds: 20 };
-				var HasData = false;
-				var GameData;
+				if (DebugMode) {
+					GameData = [ [ { type: chess.PAWN, color: chess.BLACK }, null, null, null, null, null, null, null ],
+								 [ null, null, null, null, null, null, null, null ],
+								 [ null, null, null, null, null, null, null, null ],
+								 [ null, null, null, null, null, null, null, null ],
+								 [ null, null, null, null, null, null, null, null ],
+								 [ null, null, null, null, null, null, null, null ],
+								 [ null, null, null, null, null, null, null, null ],
+								 [ null, null, null, null, null, null, null, { type: chess.KING, color: chess.WHITE } ] ];
+				} else {
+					var cognitoIdentityPoolID = "CREDS";
+					var sqsUrl = "CREDS";
+					var awsRegion = 'eu-west-1';
+					var creds = new AWS.CognitoIdentityCredentials({ IdentityPoolId: cognitoIdentityPoolID });
+					AWS.config.region = awsRegion;
+					var sqs = new AWS.SQS();
+					var params = { QueueUrl: sqsUrl, VisibilityTimeout: 0, WaitTimeSeconds: 20 };
+					var HasData = false;
 
-				sqs.receiveMessage(params, function(err, data) {
-					if (!err) {
-						if (data.Messages[0]) {
-							HasData = true;
-							GameData = data.Messages[0].Body;
-							var params = { QueueUrl: sqsUrl, ReceiptHandle: data.Messages[0].ReceiptHandle };
-							sqs.deleteMessage(params, function(err, data) {
-								if (err) {
-									console.log("Can not delete the message D:");
-								}
-							});
+					sqs.receiveMessage(params, function(err, data) {
+						if (!err) {
+							if (data.Messages[0]) {
+								HasData = true;
+								GameData = data.Messages[0].Body;
+								var params = { QueueUrl: sqsUrl, ReceiptHandle: data.Messages[0].ReceiptHandle };
+								sqs.deleteMessage(params, function(err, data) {
+									if (err) {
+										console.log("Can not delete the message D:");
+									}
+								});
+							}
 						}
-					}
-				});
+					});
 				
-				if (!HasData) {
-					document.write("No data!");
-					return;
+					if (!HasData) {
+						document.write("No data!");
+						return;
+					}
 				}
 
-				var GameWidth = document.documentElement.clientWidth * 0.9;
-				var GameHeight = document.documentElement.clientHeight * 0.9;
-				var GameSize = GameWidth * 0.9;
-				if (GameHeight < GameWidth) {
-					GameSize = GameHeight * 0.9;
-				}
-				var PaddingX = (GameWidth - GameSize) / 2;
-				var PaddingY = (GameHeight - GameSize) / 2;
+				OnResize();
+			
+			};
 
+			function DrawField() {
+				
+				var chess = new Chess();
 				var c = document.getElementById("GameField");
-				c.width = GameWidth;
-				c.height = GameHeight;
 				var ctx = c.getContext("2d");
 				
 				ctx.fillStyle = "#000000";
@@ -116,7 +125,31 @@
 				
 			}
 
-			window.addEventListener("load", DrawField);
+			function DoResize() {
+				
+				GameWidth = document.documentElement.clientWidth * 0.9;
+				GameHeight = document.documentElement.clientHeight * 0.9;
+				GameSize = GameWidth * 0.9;
+				if (GameHeight < GameWidth) {
+					GameSize = GameHeight * 0.9;
+				}
+				PaddingX = (GameWidth - GameSize) / 2;
+				PaddingY = (GameHeight - GameSize) / 2;
+				var c = document.getElementById("GameField");
+				c.width = GameWidth;
+				c.height = GameHeight;
+				
+			}
+
+			function OnResize() {
+				
+				DoResize();
+				DrawField();
+				
+			}
+
+			window.addEventListener("load", Setup);
+			window.addEventListener("resize", OnResize);
 		</script>
 		<canvas id="GameField" width="1000" height="1000" style="margin-top:1%;">
 			Your browser sucks!
