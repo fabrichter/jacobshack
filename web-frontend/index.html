@@ -1,0 +1,56 @@
+<!Doctype HTML>
+<html>
+	<head>
+		<title>Chess</title>
+	</head>
+	<body>
+		<script script="text/javascript">
+			/*
+				Game data:
+				0 - Empty
+				1 - Pawn
+				2 - Knight
+				3 - Bishop
+				4 - Rook
+				5 - Queen
+				6 - King
+				1-6: White pieces
+				7-12: Black pieces
+			*/
+			
+			function DrawField() {
+				var GameData = [ [ 1, 1, 1, 1, 1, 1, 1, 1 ],
+								 [ 0, 0, 0, 0, 0, 0, 0, 0 ],
+								 [ 0, 0, 0, 0, 0, 0, 0, 0 ],
+								 [ 0, 0, 0, 0, 0, 0, 0, 0 ],
+								 [ 0, 0, 0, 0, 0, 0, 0, 0 ],
+								 [ 0, 0, 0, 0, 0, 0, 0, 0 ],
+								 [ 0, 0, 0, 0, 0, 0, 0, 0 ],
+								 [ 7, 7, 7, 7, 7, 7, 7, 7 ] ];
+			
+				var c = document.getElementById("GameField");
+				c.width = document.documentElement.clientWidth;
+				c.height = document.documentElement.clientHeight;
+				var ctx = c.getContext("2d");
+			}
+
+			window.onload = DrawField;
+		</script>
+		<canvas id="GameField" width="1000" height="1000" style="position:absolute;">
+			Your browser sucks!
+		</canvas>
+		<img src="img/ba_wh.png" id="img1" style="display:none;"/>
+		<img src="img/sp_wh.png" id="img2" style="display:none;"/>
+		<img src="img/la_wh.png" id="img3" style="display:none;"/>
+		<img src="img/tu_wh.png" id="img4" style="display:none;"/>
+		<img src="img/qu_wh.png" id="img5" style="display:none;"/>
+		<img src="img/ki_wh.png" id="img6" style="display:none;"/>
+		<img src="img/ba_bl.png" id="img7" style="display:none;"/>
+		<img src="img/sp_bl.png" id="img8" style="display:none;"/>
+		<img src="img/la_bl.png" id="img9" style="display:none;"/>
+		<img src="img/tu_bl.png" id="img10" style="display:none;"/>
+		<img src="img/qu_bl.png" id="img11" style="display:none;"/>
+		<img src="img/ki_bl.png" id="img12" style="display:none;"/>
+	</body>
+</html>
+
