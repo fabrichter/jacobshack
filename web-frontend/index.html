@@ -30,19 +30,44 @@
 				
 				var GameWidth = document.documentElement.clientWidth * 0.9;
 				var GameHeight = document.documentElement.clientHeight * 0.9;
-				var GameSize = GameWidth;
-				var PaddingX = 0;
-				var PaddingY = (GameHeight - GameWidth) / 2;
+				var GameSize = GameWidth * 0.9;
 				if (GameHeight < GameWidth) {
-					GameSize = GameHeight;
-					PaddingY = 0;
-					PaddingX = (GameWidth - GameHeight) / 2;
+					GameSize = GameHeight * 0.9;
 				}
+				var PaddingX = (GameWidth - GameSize) / 2;
+				var PaddingY = (GameHeight - GameSize) / 2;
 
 				var c = document.getElementById("GameField");
 				c.width = GameWidth;
 				c.height = GameHeight;
 				var ctx = c.getContext("2d");
+				
+				ctx.fillStyle = "#000000";
+				ctx.fillRect(PaddingX - (GameSize * 0.03), PaddingY - (GameSize * 0.03), GameSize * 1.06, GameSize * 1.06);
+				
+				var Letters = [ "A", "B", "C", "D", "E", "F", "G", "H" ];
+				ctx.font = (GameSize * 0.02) + "px Arial";
+				ctx.fillStyle = "#FFFFFF";
+				for (var i = 0; i < 8; i++) {
+					ctx.fillText(Letters[i], (i * (GameSize / 8)) + (GameSize / 16) + PaddingX - (GameSize * 0.005), PaddingY - (GameSize * 0.01));
+					ctx.fillText(8 - i, PaddingX - (GameSize * 0.02), (i * (GameSize / 8)) + (GameSize / 16) + PaddingY + (GameSize * 0.005));
+				}
+				
+				for (var x = 0; x < 8; x++) {
+					for (var y = 0; y < 8; y++) {
+						if (((y * 9) + x) % 2 == 0) {
+							ctx.fillStyle = "#FFCE9E";
+						} else {
+							ctx.fillStyle = "#D18B47";
+						}
+						ctx.fillRect(x * (GameSize / 8) + PaddingX, y * (GameSize / 8) + PaddingY, GameSize / 8, GameSize / 8);
+						ctx.moveTo(x * (GameSize / 8) + PaddingX, y * (GameSize / 8) + PaddingY);
+						ctx.lineTo(x * (GameSize / 8) + PaddingX, (y + 1) * (GameSize / 8) + PaddingY);
+						ctx.lineTo((x + 1) * (GameSize / 8) + PaddingX, (y + 1) * (GameSize / 8) + PaddingY);
+						ctx.lineTo((x + 1) * (GameSize / 8) + PaddingX, y * (GameSize / 8) + PaddingY);
+						ctx.stroke();
+					}
+				}
 				
 				var CurrentImg;
 				for (var x = 0; x < 8; x++) {
