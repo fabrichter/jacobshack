@@ -7,10 +7,18 @@
 	<body style="text-align:center;">
 		<script type="text/javascript" src="chess.min.js"></script>
 		<script type="text/javascript">
+			var UrlParts = document.location.toString().split("?");
+			var GameId = "";
+			if (UrlParts.length != 2) {
+				document.write("No game ID given in URL");
+			} else {
+				var GameId = UrlParts[1];
+			}
+
 			var GameWidth, GameHeight, GameSize, PaddingX, PaddingY;
 			var chess;
 			var HasData = false;
-			var DebugMode = true;
+			var DebugMode = false;
 
 			function Setup() {
 				chess = new Chess();
@@ -19,11 +27,24 @@
 					HasData = true;
 					chess.load("r1k4r/p2nb1p1/2b4p/1p1n1p2/2PP4/3Q1NB1/1P3PPP/R5K1 b - c3 0 19");
 				} else {
-					// Fetch data from server
+					var Request = new XMLHttpRequest();
+					Request.addEventListener("load", RequestDone);
+					Request.open("GET", "http://node-express-env.yppentce29.eu-west-1.elasticbeanstalk.com/game/" + GameId);
+					Request.send();
 				}
 				
 				OnResize();
-			};
+			}
+
+			function RequestDone() {
+				if (!chess.load(this.responseText)) {
+					document.write("Invalid data");
+				} else {
+					HasData = true;
+					DrawField();
+				}
+				window.setTimeout(DoReload, 1000);
+			}
 
 			function DrawField() {
 				if (!HasData) {
@@ -116,10 +137,12 @@
 				location.reload();
 			}
 
-			window.addEventListener("load", Setup);
-			window.addEventListener("resize", OnResize);
+			if (GameId != "") {
+				window.addEventListener("load", Setup);
+				window.addEventListener("resize", OnResize);
+			}
 		</script>
-		<canvas id="GameField" width="1000" height="1000" style="margin-top:1%;">
+		<canvas id="GameField" width="1000" height="1000" style="margin-top:1%; z-index:1;">
 			Your browser sucks!
 		</canvas>
 		<img src="img/ba_wh.png" id="img1" style="display:none;"/>
