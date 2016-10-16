@@ -8,12 +8,12 @@
 		<script type="text/javascript" src="chess.min.js"></script>
 		<script type="text/javascript">
 			var UrlParts = document.location.toString().split("?");
-			var GameId = "";
-			if (UrlParts.length != 2) {
-				document.write("No game ID given in URL");
+			var GameId = "jacobsHack";
+		 /* if (UrlParts.length != 2) {
+			document.write("No game ID given in URL");
 			} else {
-				var GameId = UrlParts[1];
-			}
+			var GameId = UrlParts[1];
+			}*/
 
 			var GameWidth, GameHeight, GameSize, PaddingX, PaddingY;
 			var chess;
@@ -37,8 +37,9 @@
 
 			function RequestDone() {
 				if (!chess.load(this.responseText)) {
-					document.write("Invalid data");
+					document.title = "Chess - there is no game running at the moment";
 				} else {
+					document.title = "Chess";
 					HasData = true;
 					OnResize();
 				}
