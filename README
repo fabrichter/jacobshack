@@ -3,6 +3,7 @@ Amazon Alexa-controlled chess with browser- and Unity3d-based frontends
 server: Backend code, runs on amazon S3
 server/static: Web-based frontend
 Alexa-Chess: Unity3d frontend
+alexa-chess-backend: Amazon alexa code
 
 Libraries used:
 Express.js - http://expressjs.com/ (server)
