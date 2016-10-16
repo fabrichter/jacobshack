@@ -53,6 +53,8 @@ app.delete('/game/:id', function(req, res) {
 	}
 	console.log('delete; now: ' + JSON.stringify(games));
 });
+
+app.use(express.static('static'));
 var port = process.env.PORT || 3000;
 app.listen(port, function () {
 	console.log('listening at port ' + port);
