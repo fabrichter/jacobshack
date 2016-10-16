@@ -6,83 +6,63 @@
 	</head>
 	<body style="text-align:center;">
 		<script type="text/javascript" src="chess.min.js"></script>
-		<script type="text/javascript" src="aws-sdk.min.js"></script>
 		<script type="text/javascript">
-			var GameWidth, GameHeight, GameSize, PaddingX, PaddingY, GameData;
+			var UrlParts = document.location.toString().split("?");
+			var GameId = "";
+			if (UrlParts.length != 2) {
+				document.write("No game ID given in URL");
+			} else {
+				var GameId = UrlParts[1];
+			}
+
+			var GameWidth, GameHeight, GameSize, PaddingX, PaddingY;
+			var chess;
 			var HasData = false;
-			var Letters = [ "A", "B", "C", "D", "E", "F", "G", "H" ];
 			var DebugMode = false;
 
 			function Setup() {
-				var chess = new Chess();
+				chess = new Chess();
 				
 				if (DebugMode) {
-					GameData = [ [ { type: chess.PAWN, color: chess.BLACK }, null, null, null, null, null, null, null ],
-								 [ null, null, null, null, null, null, null, null ],
-								 [ null, null, null, null, null, null, null, null ],
-								 [ null, null, null, null, null, null, null, null ],
-								 [ null, null, null, null, null, null, null, null ],
-								 [ null, null, null, null, null, null, null, null ],
-								 [ null, null, null, null, null, null, null, null ],
-								 [ null, null, null, null, null, null, null, { type: chess.KING, color: chess.WHITE } ] ];
+					HasData = true;
+					chess.load("r1k4r/p2nb1p1/2b4p/1p1n1p2/2PP4/3Q1NB1/1P3PPP/R5K1 b - c3 0 19");
 				} else {
-					var cognitoIdentityPoolID = "eu-west-1:620e6b80-0d91-4f4d-9f04-d764bbb50653";
-					var sqsUrl = "https://sqs.eu-west-1.amazonaws.com/094682499647/ChessGames";
-					var awsRegion = "eu-west-1";
-					var creds = new AWS.CognitoIdentityCredentials({ IdentityPoolId: cognitoIdentityPoolID });
-					AWS.config.credentials = creds;
-					AWS.config.region = awsRegion;
-					var sqs = new AWS.SQS();
-					var params = { QueueUrl: sqsUrl, VisibilityTimeout: 0, WaitTimeSeconds: 20 };
-
-					sqs.receiveMessage(params, function(err, data) {
-						if (err) {
-							console.log("Can not get data from SQS D:");
-						} else {
-							if (data.Messages[0]) {
-								HasData = true;
-								if (!chess.load(data.Messages[0].Body)) {
-									console.log("Invalid data D:");
-									HasData = false;
-								}
-								GameData = new Array(8);
-								for (var x = 0; x < 8; x++) {
-									GameData[x] = new Array(8);
-									for (var y = 0; y < 8; y++) {
-										GameData[x][y] = chess.get(Letters[x] + y);
-									}
-								}
-								var params = { QueueUrl: sqsUrl, ReceiptHandle: data.Messages[0].ReceiptHandle };
-								sqs.deleteMessage(params, function(err, data) {
-									if (err) {
-										console.log("Can not delete the message D:");
-									}
-								});
-							}
-						}
-						if (!HasData) {
-							document.write("No data!");
-						} else {
-							DrawField();
-						}
-					});
+					var Request = new XMLHttpRequest();
+					Request.addEventListener("load", RequestDone);
+					Request.addEventListener("error", RequestError);
+					Request.open("GET", "http://node-express-env.yppentce29.eu-west-1.elasticbeanstalk.com/game/" + GameId);
+					Request.send();
 				}
-
+				
 				OnResize();
-			};
+			}
+
+			function RequestDone() {
+				if (!chess.load(this.responseText)) {
+					document.write("Invalid data");
+				} else {
+					HasData = true;
+					DrawField();
+				}
+				window.setTimeout(DoReload, 1000);
+			}
+
+			function RequestError() {
+				document.write("Can not load game");
+			}
 
 			function DrawField() {
 				if (!HasData) {
 					return;
 				}
 				
-				var chess = new Chess();
 				var c = document.getElementById("GameField");
 				var ctx = c.getContext("2d");
 				
 				ctx.fillStyle = "#000000";
 				ctx.fillRect(PaddingX - (GameSize * 0.03), PaddingY - (GameSize * 0.03), GameSize * 1.06, GameSize * 1.06);
 				
+				var Letters = [ "A", "B", "C", "D", "E", "F", "G", "H" ];
 				ctx.font = (GameSize * 0.02) + "px Arial";
 				ctx.fillStyle = "#FFFFFF";
 				for (var i = 0; i < 8; i++) {
@@ -107,10 +87,11 @@
 				}
 				
 				var CurrentImg;
+				Letters = [ "a", "b", "c", "d", "e", "f", "g", "h" ];
 				for (var x = 0; x < 8; x++) {
 					for (var y = 0; y < 8; y++) {
-						if (GameData[y][x] != null) {
-							CurrentImg = document.getElementById("img" + GetId(GameData[y][x]));
+						if (chess.get(Letters[x] + (7 - y + 1)) != null) {
+							CurrentImg = document.getElementById("img" + GetId(chess.get(Letters[x] + (7 - y + 1))));
 							ctx.drawImage(CurrentImg, (x * (GameSize / 8)) + PaddingX, (y * (GameSize / 8)) + PaddingY, GameSize / 8, GameSize / 8);
 						}
 					}
@@ -118,7 +99,6 @@
 			}
 
 			function GetId(p) {
-				var chess = new Chess();
 				var Result;
 				if (p.type == chess.PAWN) {
 					Result = 1;
@@ -158,10 +138,16 @@
 				DrawField();
 			}
 
-			window.addEventListener("load", Setup);
-			window.addEventListener("resize", OnResize);
+			function DoReload() {
+				location.reload();
+			}
+
+			if (GameId != "") {
+				window.addEventListener("load", Setup);
+				window.addEventListener("resize", OnResize);
+			}
 		</script>
-		<canvas id="GameField" width="1000" height="1000" style="margin-top:1%;">
+		<canvas id="GameField" width="1000" height="1000" style="margin-top:1%; z-index:1;">
 			Your browser sucks!
 		</canvas>
 		<img src="img/ba_wh.png" id="img1" style="display:none;"/>
