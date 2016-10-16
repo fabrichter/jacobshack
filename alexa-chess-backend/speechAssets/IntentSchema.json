@@ -1,0 +1,30 @@
+{
+  "intents": [
+    {
+		"intent": "NewGameIntent"
+    },
+    {
+		"intent": "WatchIntent"
+    },
+	{
+		"intent": "NameIntent",
+		"slots": [ { "name": "Name", "type": "AMAZON.US_FIRST_NAME"}]
+	},
+	{
+		"intent": "TurnIntent",
+		"slots": [
+			{ "name": "From", "type": "CHESS_FIELD"},
+			{ "name": "To", "type": "CHESS_FIELD"}
+		]
+	},
+    {
+      "intent": "AMAZON.HelpIntent"
+    },
+    {
+      "intent": "AMAZON.StopIntent"
+    },
+    {
+      "intent": "AMAZON.CancelIntent"
+    }
+  ]
+}

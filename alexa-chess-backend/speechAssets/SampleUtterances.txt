@@ -1,0 +1,18 @@
+NewGameIntent start a new game
+NewGameIntent i want to play chess
+NewGameIntent chess
+NewGameIntent chess i want to play
+NewGameIntent let me play chess
+NameIntent my name is {Name}
+NameIntent i am {Name}
+NameIntent you can call me {Name}
+NameIntent call me {Name} baby
+NameIntent {Name}
+TurnIntent {From} to {To}
+TurnIntent Move {From} to {To}
+WatchIntent Where can i watch the game
+WatchIntent I want to watch
+WatchIntent let me watch
+WatchIntent show me the board
+WatchIntent let me see the board
+WatchIntent i want to see the board
