@@ -33,8 +33,6 @@
 					Request.open("GET", "http://node-express-env.yppentce29.eu-west-1.elasticbeanstalk.com/game/" + GameId);
 					Request.send();
 				}
-				
-				OnResize();
 			}
 
 			function RequestDone() {
@@ -42,7 +40,7 @@
 					document.write("Invalid data");
 				} else {
 					HasData = true;
-					DrawField();
+					OnResize();
 				}
 				window.setTimeout(Setup, 1000);
 			}
